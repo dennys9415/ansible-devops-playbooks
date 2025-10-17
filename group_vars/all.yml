@@ -1,0 +1,58 @@
+---
+# Global variables for all hosts
+ansible_python_interpreter: /usr/bin/python3
+
+# System configuration
+timezone: UTC
+admin_user: admin
+system_locale: en_US.UTF-8
+
+# Security settings
+fail2ban_enabled: true
+ufw_enabled: true
+automatic_security_updates: true
+
+# Package management
+base_packages:
+  - curl
+  - wget
+  - vim
+  - htop
+  - git
+  - unzip
+  - software-properties-common
+  - apt-transport-https
+  - ca-certificates
+  - gnupg-agent
+
+# Firewall rules
+firewall_rules:
+  - rule: allow
+    port: 22
+    proto: tcp
+    comment: SSH
+  - rule: allow
+    port: 80
+    proto: tcp
+    comment: HTTP
+  - rule: allow
+    port: 443
+    proto: tcp
+    comment: HTTPS
+
+# Backup settings
+backup_enabled: true
+backup_retention_days: 30
+backup_schedule: "0 2 * * *"
+
+# Monitoring settings
+monitoring_enabled: true
+prometheus_port: 9090
+grafana_port: 3000
+node_exporter_port: 9100
+
+# Application settings
+app_user: app
+app_group: app
+deploy_path: /opt/application
+log_path: /var/log/application

@@ -1,0 +1,35 @@
+---
+# Ansible Lint configuration
+parseable: true
+quiet: false
+exclude_paths:
+  - .github/
+  - molecule/
+  - tests/
+  - files/
+  - scripts/
+
+# Rule configuration
+use_default_rules: true
+rulesdir:
+  - .custom_rules/
+
+# Custom rule configurations
+tags:
+  - production
+  - security
+
+# Skip specific rules
+skip_list:
+  - 'no-changed-when'  # Sometimes we don't need changed_when
+  - 'fqcn-builtins'    # Allow short module names
+  - 'name[missing]'    # Allow tasks without names in some cases
+  - 'role-name'        # Allow our custom role names
+
+# Rule overrides
+warn_list:
+  - 'no-handler'
+  - 'no-tabs'
+
+# Verbosity
+verbosity: 1

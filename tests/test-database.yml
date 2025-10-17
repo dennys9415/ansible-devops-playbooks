@@ -1,0 +1,47 @@
+---
+- name: Test database setup
+  hosts: databases
+  become: true
+  tasks:
+    - name: Verify postgresql is installed
+      package:
+        name: "postgresql-{{ postgresql_version | default('14') }}"
+        state: present
+      register: postgresql_install
+
+    - name: Verify postgresql service
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+      register: postgresql_service
+
+    - name: Verify postgresql is listening on port 5432
+      wait_for:
+        port: 5432
+        host: localhost
+        timeout: 30
+      register: postgresql_port
+
+    - name: Test postgresql connection
+      postgresql_query:
+        query: "SELECT version();"
+        login_user: postgres
+      register: postgresql_version
+
+    - name: Verify application database exists
+      postgresql_db:
+        name: "{{ item.name }}"
+        state: present
+      loop: "{{ postgresql_databases }}"
+      register: database_checks
+
+    - name: Print test results
+      debug:
+        msg: |
+          Database tests completed:
+          - PostgreSQL installed: {{ postgresql_install.changed | default(false) | ternary('Installed', 'Already present') }}
+          - PostgreSQL service: {{ postgresql_service.changed | default(false) | ternary('Started', 'Running') }}
+          - PostgreSQL port 5432: {{ postgresql_port.elapsed | default('N/A') }} seconds
+          - PostgreSQL version: {{ postgresql_version.query_result[0]['version'] | default('Unknown') }}
+          - Databases created: {{ database_checks.results | length }}

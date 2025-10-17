@@ -1,0 +1,26 @@
+{
+    "application": {
+        "name": "{{ app_name | default('My Application') }}",
+        "version": "{{ app_version | default('1.0.0') }}",
+        "environment": "{{ environment | default('development') }}"
+    },
+    "server": {
+        "port": {{ app_port | default(8080) }},
+        "host": "{{ app_host | default('0.0.0.0') }}"
+    },
+    "database": {
+        "host": "{{ db_host | default('localhost') }}",
+        "port": {{ db_port | default(5432) }},
+        "name": "{{ db_name | default('app_database') }}",
+        "username": "{{ db_username | default('app_user') }}",
+        "password": "{{ db_password | default('') }}"
+    },
+    "logging": {
+        "level": "{{ log_level | default('info') }}",
+        "file": "{{ log_file | default('/var/log/application/app.log') }}"
+    },
+    "features": {
+        "monitoring": {{ 'true' if monitoring_enabled | default(true) else 'false' }},
+        "debug": {{ 'true' if environment == 'development' else 'false' }}
+    }
+}

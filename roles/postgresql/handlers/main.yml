@@ -1,0 +1,10 @@
+---
+- name: restart postgresql
+  service:
+    name: "{{ postgresql_service | default('postgresql') }}"
+    state: restarted
+
+- name: reload postgresql
+  service:
+    name: "{{ postgresql_service | default('postgresql') }}"
+    state: reloaded

@@ -1,0 +1,8 @@
+---
+# Node.js role default variables
+
+nodejs_version: "18"
+npm_global_packages:
+  - pm2
+  - nodemon
+  - yarn

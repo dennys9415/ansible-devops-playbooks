@@ -1,0 +1,55 @@
+name: Ansible Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ansible-lint:
+    name: Ansible Lint
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ansible ansible-lint yamllint molecule molecule-docker docker
+
+    - name: Install Ansible Galaxy requirements
+      run: |
+        ansible-galaxy install -r requirements.yml
+
+    - name: Run ansible-lint
+      run: |
+        ansible-lint playbooks/ roles/ --exclude=files/ --exclude=.github/ --exclude=tests/
+
+    - name: Run yamllint
+      run: |
+        yamllint . --strict
+
+    - name: Check playbook syntax
+      run: |
+        for playbook in playbooks/*.yml; do
+          echo "Checking syntax for $playbook"
+          ansible-playbook --syntax-check $playbook -i inventory/development/hosts
+        done
+
+    - name: Validate inventory files
+      run: |
+        ansible-inventory -i inventory/development/hosts --list
+        ansible-inventory -i inventory/staging/hosts --list
+        ansible-inventory -i inventory/production/hosts --list

@@ -1,0 +1,8 @@
+---
+- name: Include all common tasks
+  include_tasks: users.yml
+  tags: common
+
+- name: Include security tasks
+  include_tasks: security.yml
+  tags: common

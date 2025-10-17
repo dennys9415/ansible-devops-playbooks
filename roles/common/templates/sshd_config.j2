@@ -1,0 +1,43 @@
+# Managed by Ansible - DO NOT EDIT MANUALLY
+
+# Basic settings
+Port 22
+Protocol 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Security settings
+PermitRootLogin no
+StrictModes yes
+MaxAuthTries 3
+MaxSessions 10
+
+# Authentication
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+PasswordAuthentication {{ 'yes' if ssh_password_auth | default(false) else 'no' }}
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+
+# Encryption
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
+
+# Other settings
+X11Forwarding no
+PrintMotd yes
+PrintLastLog yes
+TCPKeepAlive yes
+ClientAliveInterval 300
+ClientAliveCountMax 2
+UseDNS no
+
+# Allow users
+{% for user in ssh_allowed_users | default([]) %}
+AllowUsers {{ user }}
+{% endfor %}
+
+# Subsystem
+Subsystem sftp /usr/lib/openssh/sftp-server

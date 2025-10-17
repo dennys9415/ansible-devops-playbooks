@@ -1,0 +1,87 @@
+---
+- name: Deploy and configure web servers
+  hosts: webservers
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+    - ../group_vars/webservers.yml
+
+  pre_tasks:
+    - name: Include base provisioning
+      include_role:
+        name: common
+      tags: [base]
+
+  roles:
+    - role: nginx
+      tags: [webserver, nginx]
+
+  tasks:
+    - name: Create web root directory
+      file:
+        path: "{{ web_root }}"
+        state: directory
+        owner: "{{ web_user }}"
+        group: "{{ web_user }}"
+        mode: '0755'
+      tags: [webserver, files]
+
+    - name: Deploy SSL certificates
+      copy:
+        src: "files/ssl/nginx.crt"
+        dest: "{{ ssl_cert_path }}"
+        owner: root
+        group: root
+        mode: '0644'
+      when: ssl_enabled | default(false)
+      tags: [webserver, ssl]
+
+    - name: Deploy SSL private key
+      copy:
+        src: "files/ssl/nginx.key"
+        dest: "{{ ssl_key_path }}"
+        owner: root
+        group: root
+        mode: '0600'
+      when: ssl_enabled | default(false)
+      tags: [webserver, ssl]
+
+    - name: Configure nginx virtual host
+      template:
+        src: nginx-site.conf.j2
+        dest: "/etc/nginx/sites-available/{{ domain_name }}"
+        owner: root
+        group: root
+        mode: '0644'
+      notify: reload nginx
+      tags: [webserver, nginx, config]
+
+    - name: Enable nginx site
+      file:
+        src: "/etc/nginx/sites-available/{{ domain_name }}"
+        dest: "/etc/nginx/sites-enabled/{{ domain_name }}"
+        state: link
+      notify: reload nginx
+      tags: [webserver, nginx, config]
+
+    - name: Deploy static content
+      copy:
+        src: "../files/web/index.html"
+        dest: "{{ web_root }}/index.html"
+        owner: "{{ web_user }}"
+        group: "{{ web_user }}"
+        mode: '0644'
+      tags: [webserver, content]
+
+    - name: Ensure nginx is running and enabled
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+      tags: [webserver, nginx, service]
+
+  handlers:
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded

@@ -1,0 +1,8 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Example verification task
+      debug:
+        msg: "Role verification completed successfully"

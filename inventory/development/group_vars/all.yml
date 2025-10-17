@@ -1,0 +1,33 @@
+---
+# Development environment variables
+environment: development
+
+# System configuration
+timezone: UTC
+admin_user: developer
+
+# Security settings (relaxed for development)
+fail2ban_enabled: false
+ufw_enabled: false
+automatic_security_updates: false
+
+# Package management
+base_packages:
+  - curl
+  - wget
+  - vim
+  - htop
+  - git
+  - unzip
+  - software-properties-common
+
+# Firewall rules (minimal for development)
+firewall_rules: []
+
+# Development-specific settings
+development_tools:
+  - build-essential
+  - python3-dev
+  - python3-pip
+  - nodejs
+  - npm

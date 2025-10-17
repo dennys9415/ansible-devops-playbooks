@@ -1,0 +1,39 @@
+# Ansible Galaxy roles
+- src: geerlingguy.docker
+  version: 7.0.0
+- src: geerlingguy.nginx
+  version: 4.1.0
+- src: geerlingguy.postgresql
+  version: 3.2.0
+- src: geerlingguy.nodejs
+  version: 6.0.0
+- src: geerlingguy.prometheus
+  version: 1.0.0
+- src: geerlingguy.grafana
+  version: 2.0.0
+- src: geerlingguy.redis
+  version: 2.0.0
+- src: geerlingguy.mysql
+  version: 3.6.0
+- src: geerlingguy.security
+  version: 2.0.0
+- src: geerlingguy.apache
+  version: 4.0.0
+- src: geerlingguy.java
+  version: 3.0.0
+- src: geerlingguy.elasticsearch
+  version: 7.0.0
+- src: geerlingguy.kibana
+  version: 4.0.0
+
+# Collections
+- name: community.general
+  version: 7.0.0
+- name: community.docker
+  version: 3.0.0
+- name: amazon.aws
+  version: 5.0.0
+- name: google.cloud
+  version: 1.0.0
+- name: azure.azcollection
+  version: 1.0.0

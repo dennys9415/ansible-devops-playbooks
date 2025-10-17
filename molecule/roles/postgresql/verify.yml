@@ -1,0 +1,31 @@
+---
+- name: Verify postgresql installation
+  hosts: all
+  become: true
+  tasks:
+    - name: Check if postgresql is installed
+      package:
+        name: postgresql
+      register: postgresql_install
+
+    - name: Verify postgresql service
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Verify postgresql is listening on port 5432
+      wait_for:
+        port: 5432
+        host: localhost
+        timeout: 30
+
+    - name: Test postgresql connection
+      postgresql_query:
+        query: "SELECT version();"
+        login_user: postgres
+      register: postgresql_version
+
+    - name: Print verification result
+      debug:
+        msg: "PostgreSQL role verification completed successfully"

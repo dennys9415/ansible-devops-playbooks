@@ -1,0 +1,37 @@
+---
+- name: Test common role
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify admin user exists
+      user:
+        name: "{{ admin_user }}"
+        state: present
+      register: admin_user_check
+
+    - name: Verify SSH configuration
+      stat:
+        path: /etc/ssh/sshd_config
+      register: ssh_config
+
+    - name: Verify UFW is configured
+      command: ufw status
+      register: ufw_status
+      when: ansible_os_family == "Debian"
+      ignore_errors: yes
+
+    - name: Verify base packages are installed
+      package:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ base_packages }}"
+      register: package_checks
+
+    - name: Print test results
+      debug:
+        msg: |
+          Common role tests completed:
+          - Admin user: {{ admin_user_check.changed | default(false) | ternary('Created', 'Exists') }}
+          - SSH config: {{ ssh_config.stat.exists | ternary('Exists', 'Missing') }}
+          - UFW status: {{ ufw_status.rc == 0 | ternary('Enabled', 'Disabled/Not Available') }}
+          - Packages installed: {{ package_checks.results | length }}

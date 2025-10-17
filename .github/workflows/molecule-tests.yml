@@ -1,0 +1,54 @@
+name: Molecule Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly
+
+jobs:
+  molecule-test:
+    name: Molecule Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        role: [common, nginx, postgresql, docker, nodejs, prometheus]
+        python-version: [3.9]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ansible ansible-lint yamllint molecule molecule-docker docker
+
+    - name: Install Docker
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker.io
+        sudo usermod -aG docker $USER
+        sudo systemctl start docker
+        sudo systemctl enable docker
+
+    - name: Test role with molecule
+      run: |
+        cd roles/${{ matrix.role }}
+        molecule test
+
+    - name: Upload test logs
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: molecule-logs-${{ matrix.role }}
+        path: roles/${{ matrix.role }}/.molecule/
+        retention-days: 7

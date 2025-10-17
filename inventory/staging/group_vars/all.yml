@@ -1,0 +1,42 @@
+---
+# Staging environment variables
+environment: staging
+
+# System configuration
+timezone: UTC
+admin_user: admin
+
+# Security settings
+fail2ban_enabled: true
+ufw_enabled: true
+automatic_security_updates: true
+
+# Package management
+base_packages:
+  - curl
+  - wget
+  - vim
+  - htop
+  - git
+  - unzip
+  - software-properties-common
+  - apt-transport-https
+  - ca-certificates
+  - gnupg-agent
+  - fail2ban
+  - ufw
+
+# Firewall rules
+firewall_rules:
+  - rule: allow
+    port: 22
+    proto: tcp
+    comment: SSH
+  - rule: allow
+    port: 80
+    proto: tcp
+    comment: HTTP
+  - rule: allow
+    port: 443
+    proto: tcp
+    comment: HTTPS

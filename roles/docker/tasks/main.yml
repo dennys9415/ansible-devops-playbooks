@@ -1,0 +1,68 @@
+---
+- name: Install dependencies
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  tags: [docker, dependencies]
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ansible_os_family == "Debian"
+  tags: [docker, repository]
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  tags: [docker, repository]
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  tags: [docker, install]
+
+- name: Install Docker (RedHat)
+  yum:
+    name: docker
+    state: present
+  when: ansible_os_family == "RedHat"
+  tags: [docker, install]
+
+- name: Add users to docker group
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes
+  loop: "{{ docker_users | default([]) }}"
+  tags: [docker, users]
+
+- name: Ensure Docker is running and enabled
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  tags: [docker, service]
+
+- name: Install Docker Compose
+  get_url:
+    url: https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+  tags: [docker, compose]

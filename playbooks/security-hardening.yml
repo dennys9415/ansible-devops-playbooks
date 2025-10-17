@@ -1,0 +1,85 @@
+---
+- name: Security hardening and CIS compliance
+  hosts: all
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Apply common security role
+      include_role:
+        name: common
+        tasks_from: security
+      tags: [security, hardening]
+
+    - name: Remove unnecessary packages
+      package:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ security_unnecessary_packages }}"
+      tags: [security, packages]
+
+    - name: Configure password aging
+      user:
+        name: "{{ item.name }}"
+        password_max_days: "{{ item.max_days | default(90) }}"
+        password_min_days: "{{ item.min_days | default(7) }}"
+        password_warn_days: "{{ item.warn_days | default(7) }}"
+      loop: "{{ security_password_policies }}"
+      tags: [security, passwords]
+
+    - name: Configure system audit rules
+      copy:
+        content: |
+          ## First rule - delete all
+          -D
+
+          ## Increase the buffers to survive stress events.
+          ## Make this bigger for busy systems
+          -b 8192
+
+          ## Set failure mode to syslog
+          -f 1
+
+          ## Monitor file changes
+          -w /etc/passwd -p wa -k identity
+          -w /etc/group -p wa -k identity
+          -w /etc/shadow -p wa -k identity
+          -w /etc/sudoers -p wa -k identity
+        dest: /etc/audit/rules.d/50-security.rules
+        owner: root
+        group: root
+        mode: '0640'
+      when: ansible_os_family == "Debian"
+      tags: [security, audit]
+
+    - name: Configure SSH hardening
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^{{ item.key }}\\s"
+        line: "{{ item.key }} {{ item.value }}"
+        state: present
+      loop: "{{ ssh_hardening_settings }}"
+      notify: restart ssh
+      tags: [security, ssh]
+
+    - name: Configure kernel security parameters
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop: "{{ kernel_security_params }}"
+      tags: [security, kernel]
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: sshd
+        state: restarted
+
+    - name: restart auditd
+      service:
+        name: auditd
+        state: restarted
+      when: ansible_os_family == "Debian"

@@ -1,0 +1,32 @@
+---
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  tags: [nginx, install]
+
+- name: Install Nginx (RedHat)
+  yum:
+    name: nginx
+    state: present
+  when: ansible_os_family == "RedHat"
+  tags: [nginx, install]
+
+- name: Configure Nginx
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: reload nginx
+  tags: [nginx, config]
+
+- name: Ensure Nginx is running and enabled
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  tags: [nginx, service]

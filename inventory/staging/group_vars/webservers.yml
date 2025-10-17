@@ -1,0 +1,18 @@
+---
+# Web server configuration
+web_user: www-data
+web_group: www-data
+web_root: /var/www/html
+
+# Nginx configuration
+nginx_worker_processes: 2
+nginx_worker_connections: 1024
+
+# SSL configuration
+ssl_enabled: true
+ssl_cert_path: /etc/ssl/certs/nginx.crt
+ssl_key_path: /etc/ssl/private/nginx.key
+
+# Virtual host configuration
+domain_name: staging.example.com
+server_name: "{{ domain_name }}"

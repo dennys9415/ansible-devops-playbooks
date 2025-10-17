@@ -1,0 +1,63 @@
+---
+- name: Backup and restore operations
+  hosts: all
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Create backup directory
+      file:
+        path: "{{ backup_dir | default('/var/backups') }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      tags: [backup, setup]
+
+    - name: Backup important configuration files
+      archive:
+        path:
+          - /etc/ssh/
+          - /etc/nginx/
+          - /etc/postgresql/
+          - /etc/prometheus/
+        dest: "{{ backup_dir }}/config-backup-{{ ansible_date_time.epoch }}.tar.gz"
+        owner: root
+        group: root
+      tags: [backup, config]
+
+    - name: Backup PostgreSQL databases
+      postgresql_db:
+        name: "{{ item }}"
+        state: dump
+        target: "{{ backup_dir }}/postgresql-{{ item }}-{{ ansible_date_time.epoch }}.sql"
+      loop: "{{ postgresql_databases | default([]) | map(attribute='name') | list }}"
+      when: "'postgresql' in group_names"
+      tags: [backup, database]
+
+    - name: Schedule automated backups
+      cron:
+        name: "Automated system backup"
+        job: "{{ backup_script }} {{ backup_dir }}"
+        minute: "0"
+        hour: "2"
+        user: root
+      when: backup_enabled | default(false)
+      tags: [backup, schedule]
+
+    - name: Clean up old backups
+      find:
+        paths: "{{ backup_dir }}"
+        patterns: "*.tar.gz,*.sql"
+        age: "{{ backup_retention_days | default(30) }}d"
+      register: old_backups
+      tags: [backup, cleanup]
+
+    - name: Remove old backup files
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ old_backups.files }}"
+      when: old_backups.matched > 0
+      tags: [backup, cleanup]

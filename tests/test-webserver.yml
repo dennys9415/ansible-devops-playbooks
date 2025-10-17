@@ -1,0 +1,48 @@
+---
+- name: Test webserver setup
+  hosts: webservers
+  become: true
+  tasks:
+    - name: Verify nginx is installed
+      package:
+        name: nginx
+        state: present
+      register: nginx_install
+
+    - name: Verify nginx service
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+      register: nginx_service
+
+    - name: Verify nginx is listening on port 80
+      wait_for:
+        port: 80
+        host: localhost
+        timeout: 10
+      register: nginx_port
+
+    - name: Test nginx HTTP response
+      uri:
+        url: http://localhost
+        status_code: 200
+      register: nginx_response
+
+    - name: Verify web root directory
+      file:
+        path: "{{ web_root }}"
+        state: directory
+        owner: "{{ web_user }}"
+        group: "{{ web_user }}"
+      register: web_root_check
+
+    - name: Print test results
+      debug:
+        msg: |
+          Webserver tests completed:
+          - Nginx installed: {{ nginx_install.changed | default(false) | ternary('Installed', 'Already present') }}
+          - Nginx service: {{ nginx_service.changed | default(false) | ternary('Started', 'Running') }}
+          - Nginx port 80: {{ nginx_port.elapsed | default('N/A') }} seconds
+          - HTTP response: {{ nginx_response.status }}
+          - Web root: {{ web_root_check.stat.exists | ternary('Exists', 'Missing') }}

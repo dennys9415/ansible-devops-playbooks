@@ -1,0 +1,46 @@
+---
+- name: Configure SSH security
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart ssh
+  tags: [common, security, ssh]
+
+- name: Configure UFW firewall
+  ufw:
+    state: "{{ ufw_state | default('enabled') }}"
+    policy: "{{ ufw_policy | default('deny') }}"
+    direction: "{{ ufw_direction | default('incoming') }}"
+  when: ansible_os_family == "Debian"
+  tags: [common, security, firewall]
+
+- name: Configure UFW rules
+  ufw:
+    rule: "{{ item.rule }}"
+    port: "{{ item.port }}"
+    proto: "{{ item.proto | default('tcp') }}"
+    comment: "{{ item.comment | default(omit) }}"
+  loop: "{{ ufw_rules | default([]) }}"
+  when: ansible_os_family == "Debian"
+  tags: [common, security, firewall]
+
+- name: Install and configure fail2ban
+  apt:
+    name: fail2ban
+    state: present
+  when: ansible_os_family == "Debian" and fail2ban_enabled | default(true)
+  tags: [common, security, fail2ban]
+
+- name: Configure fail2ban
+  template:
+    src: fail2ban.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_os_family == "Debian" and fail2ban_enabled | default(true)
+  notify: restart fail2ban
+  tags: [common, security, fail2ban]

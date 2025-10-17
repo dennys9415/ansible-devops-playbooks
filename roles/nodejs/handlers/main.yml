@@ -1,0 +1,5 @@
+---
+- name: restart node application
+  service:
+    name: "{{ node_app_service | default('node-app') }}"
+    state: restarted

@@ -1,0 +1,30 @@
+---
+# Common role default variables
+
+# System users
+system_users: []
+ssh_authorized_keys: []
+sudo_users: []
+
+# SSH configuration
+ssh_password_auth: false
+ssh_allowed_users: []
+
+# Firewall configuration
+ufw_state: enabled
+ufw_policy: deny
+ufw_direction: incoming
+ufw_rules: []
+
+# Security settings
+fail2ban_enabled: true
+
+# Package management
+common_packages:
+  - curl
+  - wget
+  - vim
+  - htop
+  - git
+  - unzip
+  - software-properties-common

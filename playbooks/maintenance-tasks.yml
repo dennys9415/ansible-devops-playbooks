@@ -1,0 +1,61 @@
+---
+- name: System maintenance tasks
+  hosts: all
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+
+  tasks:
+    - name: Update all packages
+      package:
+        name: "*"
+        state: latest
+      tags: [maintenance, updates]
+
+    - name: Clean package cache
+      apt:
+        autoclean: yes
+        autoremove: yes
+      when: ansible_os_family == "Debian"
+      tags: [maintenance, cleanup]
+
+    - name: Clean temporary files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/*
+        - /var/tmp/*
+      tags: [maintenance, cleanup]
+
+    - name: Rotate log files
+      shell: logrotate -f /etc/logrotate.conf
+      tags: [maintenance, logs]
+
+    - name: Check disk usage
+      shell: df -h
+      register: disk_usage
+      tags: [maintenance, disk]
+
+    - name: Report disk usage
+      debug:
+        msg: "Disk usage on {{ inventory_hostname }}: {{ disk_usage.stdout }}"
+      tags: [maintenance, disk]
+
+    - name: Check system load
+      shell: uptime
+      register: system_load
+      tags: [maintenance, load]
+
+    - name: Report system load
+      debug:
+        msg: "System load on {{ inventory_hostname }}: {{ system_load.stdout }}"
+      tags: [maintenance, load]
+
+    - name: Restart services if needed
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop: "{{ maintenance_services | default([]) }}"
+      when: maintenance_restart_services | default(false)
+      tags: [maintenance, restart]

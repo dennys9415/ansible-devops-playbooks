@@ -1,0 +1,123 @@
+---
+- name: Base server provisioning and security hardening
+  hosts: all
+  become: true
+  serial: "30%"
+  vars_files:
+    - ../group_vars/all.yml
+
+  pre_tasks:
+    - name: Update package cache (Debian)
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Update package cache (RedHat)
+      yum:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+  roles:
+    - role: common
+      tags: [base, security, users]
+
+  tasks:
+    - name: Ensure required packages are installed
+      package:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ base_packages }}"
+      tags: [base, packages]
+
+    - name: Configure timezone
+      timezone:
+        name: "{{ timezone | default('UTC') }}"
+      tags: [base, timezone]
+
+    - name: Configure hostname
+      hostname:
+        name: "{{ inventory_hostname }}"
+      tags: [base, hostname]
+
+    - name: Create admin user
+      user:
+        name: "{{ admin_user }}"
+        groups: sudo
+        shell: /bin/bash
+        state: present
+        create_home: yes
+      tags: [base, users]
+
+    - name: Deploy SSH keys for admin user
+      authorized_key:
+        user: "{{ admin_user }}"
+        state: present
+        key: "{{ item }}"
+      with_file:
+        - "files/ssh/admin_key.pub"
+      tags: [base, ssh, security]
+
+    - name: Configure SSH daemon
+      template:
+        src: ../templates/sshd_config.j2
+        dest: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart ssh
+      tags: [security, ssh]
+
+    - name: Configure UFW firewall
+      ufw:
+        state: "{{ 'enabled' if ufw_enabled | default(true) else 'disabled' }}"
+        policy: deny
+        direction: incoming
+        logging: on
+      when: ansible_os_family == "Debian" and ufw_enabled | default(true)
+      tags: [security, firewall]
+
+    - name: Configure firewall rules
+      ufw:
+        rule: "{{ item.rule }}"
+        port: "{{ item.port }}"
+        proto: "{{ item.proto | default('tcp') }}"
+      loop: "{{ firewall_rules }}"
+      when: ansible_os_family == "Debian" and ufw_enabled | default(true)
+      tags: [security, firewall]
+
+    - name: Configure fail2ban
+      apt:
+        name: fail2ban
+        state: present
+      when: ansible_os_family == "Debian" and fail2ban_enabled | default(true)
+      tags: [security, fail2ban]
+
+    - name: Configure automatic security updates
+      apt:
+        name: unattended-upgrades
+        state: present
+      when: ansible_os_family == "Debian" and automatic_security_updates | default(true)
+      tags: [security, updates]
+
+    - name: Configure MOTD
+      template:
+        src: motd.j2
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: '0644'
+      tags: [base, motd]
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted
+
+    - name: restart fail2ban
+      service:
+        name: fail2ban
+        state: restarted
+      when: fail2ban_enabled | default(true)

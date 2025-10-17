@@ -1,0 +1,36 @@
+---
+- name: Create system users
+  user:
+    name: "{{ item.name }}"
+    state: present
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    groups: "{{ item.groups | default(omit) }}"
+    create_home: "{{ item.create_home | default(true) }}"
+    home: "{{ item.home | default(omit) }}"
+    password: "{{ item.password | default(omit) }}"
+  loop: "{{ system_users }}"
+  when: system_users is defined
+  tags: [common, users]
+
+- name: Deploy SSH keys for users
+  authorized_key:
+    user: "{{ item.user }}"
+    state: present
+    key: "{{ item.key }}"
+    exclusive: "{{ item.exclusive | default(false) }}"
+  loop: "{{ ssh_authorized_keys }}"
+  when: ssh_authorized_keys is defined
+  tags: [common, ssh]
+
+- name: Configure sudoers
+  copy:
+    content: |
+      # Managed by Ansible
+      {{ item.user }} ALL=(ALL) {{ item.sudo_priv | default('NOPASSWD:ALL') }}
+    dest: "/etc/sudoers.d/{{ item.user }}"
+    owner: root
+    group: root
+    mode: '0440'
+  loop: "{{ sudo_users }}"
+  when: sudo_users is defined
+  tags: [common, sudo]

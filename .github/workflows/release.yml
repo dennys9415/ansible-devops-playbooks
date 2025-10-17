@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        pip install ansible ansible-lint yamllint
+
+    - name: Run final linting
+      run: |
+        ansible-lint playbooks/ roles/
+        yamllint .
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        body: |
+          ## Ansible DevOps Playbooks Release ${{ github.ref_name }}
+
+          ### Features
+          - Multi-environment server provisioning
+          - Security hardening and CIS compliance
+          - Web server and database setup
+          - Monitoring stack deployment
+          - Application deployment workflows
+
+          ### Supported Platforms
+          - ✅ Ubuntu 20.04/22.04
+          - ✅ CentOS 7/8
+          - ✅ Debian 11/12
+          - ✅ Amazon Linux 2
+
+          ### Usage
+          ```bash
+          # Base provisioning
+          ansible-playbook -i inventory/development/hosts playbooks/base-provisioning.yml
+
+          # Web server setup
+          ansible-playbook -i inventory/development/hosts playbooks/webserver-setup.yml
+
+          # Database setup
+          ansible-playbook -i inventory/development/hosts playbooks/database-setup.yml
+          ```
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+
+    - name: Upload playbooks artifact
+      run: |
+        zip -r ansible-playbooks.zip playbooks/ roles/ inventory/ group_vars/ host_vars/ files/ templates/ scripts/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

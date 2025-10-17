@@ -1,0 +1,30 @@
+[all:vars]
+ansible_ssh_private_key_file=~/.ssh/production_key
+ansible_user=ubuntu
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+environment=production
+
+[webservers]
+web1.production.example.com ansible_host=192.168.1.10
+web2.production.example.com ansible_host=192.168.1.11
+web3.production.example.com ansible_host=192.168.1.12
+
+[databases]
+db1.production.example.com ansible_host=192.168.1.20
+db2.production.example.com ansible_host=192.168.1.21
+
+[load_balancers]
+lb1.production.example.com ansible_host=192.168.1.30
+
+[monitoring]
+mon1.production.example.com ansible_host=192.168.1.40
+
+[application:children]
+webservers
+databases
+
+[production:children]
+webservers
+databases
+load_balancers
+monitoring

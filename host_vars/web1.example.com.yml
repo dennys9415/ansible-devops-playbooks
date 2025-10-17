@@ -1,0 +1,23 @@
+---
+# Host-specific variables for web1.example.com
+
+# Network configuration
+ansible_host: 192.168.1.10
+ansible_user: ubuntu
+
+# Web server specific
+domain_name: web1.example.com
+server_name: "{{ domain_name }}"
+
+# SSL configuration
+ssl_certificate: /etc/ssl/certs/web1.example.com.crt
+ssl_certificate_key: /etc/ssl/private/web1.example.com.key
+
+# Application configuration
+app_name: web1-app
+app_port: 8080
+app_environment: production
+
+# Monitoring
+monitoring_enabled: true
+node_exporter_port: 9100

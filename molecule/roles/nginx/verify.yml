@@ -1,0 +1,31 @@
+---
+- name: Verify nginx installation
+  hosts: all
+  become: true
+  tasks:
+    - name: Check if nginx is installed
+      package:
+        name: nginx
+      register: nginx_install
+
+    - name: Verify nginx service
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Verify nginx is listening on port 80
+      wait_for:
+        port: 80
+        host: localhost
+        timeout: 10
+
+    - name: Test nginx response
+      uri:
+        url: http://localhost
+        status_code: 200
+      register: nginx_response
+
+    - name: Print verification result
+      debug:
+        msg: "Nginx role verification completed successfully"

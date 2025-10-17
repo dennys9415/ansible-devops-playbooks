@@ -1,0 +1,35 @@
+# Managed by Ansible - DO NOT EDIT MANUALLY
+
+# FILE LOCATIONS
+data_directory = '{{ postgresql_data_dir | default('/var/lib/postgresql/14/main') }}'
+
+# CONNECTIONS AND AUTHENTICATION
+listen_addresses = '{{ postgresql_listen_addresses | default("localhost") | join(",") }}'
+port = {{ postgresql_port | default(5432) }}
+max_connections = {{ postgresql_max_connections | default(100) }}
+
+# RESOURCE USAGE
+shared_buffers = {{ postgresql_shared_buffers | default('128MB') }}
+work_mem = {{ postgresql_work_mem | default('4MB') }}
+maintenance_work_mem = {{ postgresql_maintenance_work_mem | default('64MB') }}
+
+# QUERY TUNING
+random_page_cost = {{ postgresql_random_page_cost | default(4.0) }}
+effective_cache_size = {{ postgresql_effective_cache_size | default('1GB') }}
+
+# LOGGING
+log_destination = 'stderr'
+logging_collector = on
+log_directory = 'pg_log'
+log_filename = 'postgresql-%a.log'
+log_rotation_age = 1d
+log_rotation_size = 0
+
+# CLIENT CONNECTION DEFAULTS
+datestyle = 'iso, mdy'
+timezone = 'UTC'
+lc_messages = 'en_US.UTF-8'
+lc_monetary = 'en_US.UTF-8'
+lc_numeric = 'en_US.UTF-8'
+lc_time = 'en_US.UTF-8'
+default_text_search_config = 'pg_catalog.english'

@@ -1,0 +1,24 @@
+---
+# Web server configuration
+web_user: www-data
+web_group: www-data
+web_root: /var/www/html
+
+# Nginx configuration
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_keepalive_timeout: 65
+nginx_gzip: true
+
+# SSL configuration
+ssl_enabled: true
+ssl_cert_path: /etc/ssl/certs/nginx.crt
+ssl_key_path: /etc/ssl/private/nginx.key
+
+# Virtual host configuration
+domain_name: production.example.com
+server_name: "{{ domain_name }} www.{{ domain_name }}"
+
+# Application settings
+app_port: 8080
+app_health_check: /health

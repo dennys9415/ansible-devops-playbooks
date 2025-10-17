@@ -1,0 +1,11 @@
+---
+# PostgreSQL role default variables
+
+postgresql_version: "14"
+postgresql_port: 5432
+postgresql_max_connections: 100
+postgresql_shared_buffers: "128MB"
+postgresql_effective_cache_size: "1GB"
+postgresql_data_dir: "/var/lib/postgresql/14/main"
+postgresql_config_path: "/etc/postgresql/14/main/postgresql.conf"
+postgresql_listen_addresses: ["localhost"]

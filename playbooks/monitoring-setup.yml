@@ -1,0 +1,62 @@
+---
+- name: Deploy monitoring stack
+  hosts: monitoring
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+    - ../group_vars/monitoring.yml
+
+  pre_tasks:
+    - name: Include base provisioning
+      include_role:
+        name: common
+      tags: [base]
+
+  roles:
+    - role: prometheus
+      tags: [monitoring, prometheus]
+
+  tasks:
+    - name: Create monitoring directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: prometheus
+        group: prometheus
+        mode: '0755'
+      loop:
+        - /etc/prometheus
+        - /var/lib/prometheus
+      tags: [monitoring, directories]
+
+    - name: Configure Prometheus
+      template:
+        src: prometheus.yml.j2
+        dest: /etc/prometheus/prometheus.yml
+        owner: prometheus
+        group: prometheus
+        mode: '0644'
+      notify: restart prometheus
+      tags: [monitoring, prometheus, config]
+
+    - name: Deploy node exporter
+      include_role:
+        name: prometheus
+        tasks_from: node_exporter
+      tags: [monitoring, node_exporter]
+
+    - name: Ensure monitoring services are running
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - prometheus
+        - node_exporter
+      tags: [monitoring, services]
+
+  handlers:
+    - name: restart prometheus
+      service:
+        name: prometheus
+        state: restarted

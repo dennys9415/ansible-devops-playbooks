@@ -1,0 +1,16 @@
+---
+# Nginx role default variables
+
+nginx_user: www-data
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_keepalive_timeout: 65
+nginx_gzip: true
+
+# SSL settings
+ssl_certificate: /etc/ssl/certs/nginx.crt
+ssl_certificate_key: /etc/ssl/private/nginx.key
+
+# Virtual host settings
+server_name: localhost
+document_root: /var/www/html
