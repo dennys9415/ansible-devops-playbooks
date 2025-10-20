@@ -5,8 +5,8 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  schedule:
-    - cron: '0 0 * * 0'  # Weekly
+  #schedule:
+  #  - cron: '0 0 * * 0'  # Weekly
 
 jobs:
   molecule-test:
